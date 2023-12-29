@@ -1,65 +1,81 @@
 <?php
-require_once("functions.php");
+// Sambungkan ke database
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "rs_kita";
+$conn = new mysqli($servername, $username, $password, $dbname);
 
-// Cek apakah dokter sudah login (sesuai dengan implementasi login Anda)
-// Misalnya, cek apakah dokter memiliki session yang valid.
-
-// Contoh implementasi session (sesuaikan dengan login Anda)
-session_start();
-if (!isset($_SESSION["role"]) || $_SESSION["role"] !== "Dokter") {
-    // Redirect ke halaman login jika dokter belum login
-    header("Location: login.php");
-    exit();
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
 }
 
-$doctorId = $_SESSION["user_id"]; // Gantilah dengan sesuai dengan bagaimana Anda menyimpan ID dokter pada session.
+// Fungsi untuk mendapatkan data pasien
+function getPasienData() {
+    global $conn;
+    $query = "SELECT * FROM Pasien";
+    $result = $conn->query($query);
+    
+    $pasienData = array();
+    if ($result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $pasienData[] = $row;
+        }
+    }
+    
+    return $pasienData;
+}
 
-// Mendapatkan daftar pasien yang ditangani oleh dokter
-$patients = getDoctorPatients($doctorId);
+// Fungsi untuk mendapatkan data kamar
+function getKamarData() {
+    global $conn;
+    $query = "SELECT * FROM Kamar";
+    $result = $conn->query($query);
+    
+    $kamarData = array();
+    if ($result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $kamarData[] = $row;
+        }
+    }
+    
+    return $kamarData;
+}
 
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Dokter</title>
-    <!-- Tambahkan stylesheet atau CDN yang diperlukan -->
 </head>
-
 <body>
-    <h1>Selamat datang, Dokter!</h1>
 
-    <h2>Daftar Pasien Anda:</h2>
+<h1>Dashboard Dokter</h1>
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID Pasien</th>
-                <th>Nama Pasien</th>
-                <th>Alamat Pasien</th>
-                <th>Status</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php
-            while ($row = $patients->fetch_assoc()) {
-                echo "<tr>";
-                echo "<td>{$row['ID_Pasien']}</td>";
-                echo "<td>{$row['Nama_Pasien']}</td>";
-                echo "<td>{$row['Alamat_Pasien']}</td>";
-                echo "<td>{$row['Status']}</td>";
-                echo "<td><a href='aksi_sembuh.php?id_pasien={$row['ID_Pasien']}'>Sembuhkan</a></td>";
-                echo "</tr>";
-            }
-            ?>
-        </tbody>
-    </table>
+<h2>Daftar Pasien</h2>
+<ul>
+    <?php
+    $pasienData = getPasienData();
+    foreach ($pasienData as $pasien) {
+        echo "<li>{$pasien['Nama_Pasien']} - {$pasien['Alamat']}</li>";
+    }
+    ?>
+</ul>
 
-    <a href="logout.php">Logout</a> <!-- Tambahkan link logout sesuai dengan implementasi logout Anda -->
+<h2>Daftar Kamar</h2>
+<ul>
+    <?php
+    $kamarData = getKamarData();
+    foreach ($kamarData as $kamar) {
+        echo "<li>{$kamar['Nomor_Kamar']} - {$kamar['Tipe_Kamar']} - {$kamar['Status']}</li>";
+    }
+    ?>
+</ul>
+<!-- Tombol Kembali -->
+<a href="dashboard.php">Kembali ke Dashboard (Admin)</a>
+
 </body>
-
 </html>
